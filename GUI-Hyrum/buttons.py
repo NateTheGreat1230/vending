@@ -84,13 +84,19 @@ def summonButtons():
 
 
 def scanSuccess():
-    print('scan successful. Hello {0}, you have ${1} to spend'.format( api.getUser(), api.getBalance() ) )
+    api.scan()
+    customer = api.getCustomer()
+    print( customer)
+
+    print('scan successful. Hello {0}, you have ${1} to spend'.format( customer['name'], customer['balance'] ) )
+
+    for product in api.getProducts():
+        print( product )
+
     scanbtn.pack_forget()
     summonButtons()
 
 api = API()
-for product in api.getProducts():
-    print( product )
 
 root = tk.Tk()
 root.geometry('300x300')

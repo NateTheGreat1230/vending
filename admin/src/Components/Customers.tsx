@@ -7,6 +7,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
+import AttachMoney from '@mui/icons-material/AttachMoney';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
 import {
   GridRowModesModel,
   GridRowModes,
@@ -106,6 +113,25 @@ export default function Customers()
     }, [],
   );
 
+  const [fundsOpen, setFundsOpen] = React.useState(false);
+  const [fundingCustomer, setFundingCustomer] = React.useState<GridRowId>(0);
+
+  const handleAddFundsClick = ( id: GridRowId ) => () => {
+    setFundingCustomer(id);
+    setFundsOpen(true);
+  };
+
+  const handleFundClose = () => {
+    setFundsOpen(false);
+  };
+
+  const handleFundAddClick = ( amount: number ) => {
+    const row = rows.filter( ( row ) => row.item.id === fundingCustomer )[0];
+    row.item._call_addFunds( amount );
+    queryClient.invalidateQueries( 'Customers_Customer' );
+  };
+
+
   if( isLoading || data === undefined )
     return (
       <Box>Loading....</Box>
@@ -171,7 +197,7 @@ export default function Customers()
   const customerColumns: GridColDef[] = [
     { field: 'id', headerName: 'Id', width: 20 },
     { field: 'name', headerName: 'Name', width: 200, editable: true, valueGetter: handleValueGet, valueSetter: (parms) => handleValueSet( parms, 'name' ) },
-    { field: 'ballance', headerName: 'Ballance', width: 100, type: 'number', editable: false },
+    { field: 'balance', headerName: 'Balance', width: 100, type: 'number', editable: false, valueGetter: handleValueGet },
     {
       field: 'actions',
       type: 'actions',
@@ -201,6 +227,13 @@ export default function Customers()
         }
 
         return [
+          <GridActionsCellItem
+            icon={<AttachMoney />}
+            label="Add Funds"
+            className="textPrimary"
+            onClick={handleAddFundsClick(id)}
+            color="inherit"
+          />,
           <GridActionsCellItem
             icon={<EditIcon />}
             label="Edit"
@@ -237,6 +270,39 @@ export default function Customers()
           toolbar: { handleAddClick },
         }}
       />
+      <Dialog
+        open={fundsOpen}
+        onClose={handleFundClose}
+        PaperProps={{
+          component: 'form',
+          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            const formJson = Object.fromEntries((formData as any).entries());
+            handleFundAddClick( formJson.amount );
+            handleFundClose();
+          },
+        }}
+      >
+        <DialogTitle>Add Funds</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            How much to add
+          </DialogContentText>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="amount"
+            name="amount"
+            type="number"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleFundClose}>Cancel</Button>
+          <Button type="submit">Add</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

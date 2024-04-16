@@ -1,7 +1,7 @@
 const cinp = cinpBuilder( "http://localhost:8888" );
 
 function setupBackend() {
-  cinp.describe( "/api/v1/" ).done( 
+  cinp.describe( "/api/v1/" ).done(
     function( resp ) {
       if( resp.version != "1.0" ) {
         alert( "Invalid API version" );
@@ -19,6 +19,22 @@ function login() {
     function( resp ) {
       alert( "failed to authencate to the backend" );
     } );
+}
+
+function login_via_camera() {
+  cinp.call("/api/v1/Auth/User(login_via_camera)", {} ).done(
+    function( resp ) {
+      cinp.setAuth( "__Customer__", resp );
+    } ).fail(
+    function( resp ) {
+      alert( "failed to authencate with camera" );
+    } );
+}
+
+async function get_customer_info() {
+  const customer_uri = await cinp.call("/api/v1/Auth/User(customer)", {} );
+
+  return await cinp.get( customer_uri );
 }
 
 function doAlert( msg ) {
@@ -110,7 +126,7 @@ function buy(product, price, location, available, id) {
     <div>You have successfully bought the ${product} for a total of $${price}. </br>Please end your transaction to purchase another item.</div>
     <button class="button" onclick="end()">End</button>
   `);
-  
+
 }
 
 function end() {

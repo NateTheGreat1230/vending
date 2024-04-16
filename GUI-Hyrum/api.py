@@ -9,11 +9,17 @@ class API:
   def getProducts( self ):
     return self.client.getFilteredObjects( '/api/v1/Products/Product' )
 
-  def getUser( self ):
-    return 'Jimmy'
-
-  def getBalance( self ):
-    return 12
+  def getCustomer( self ):
+    uri = self.client.call( '/api/v1/Auth/User(customer)', {} )
+    if uri is not None:
+      return self.client.get( uri )
+    else:
+      return None
 
   def buy( self, product ): # product looks like "'/api/v1/Products/Product:1:'"
     return self.client.call( product + '(buy)' )
+
+  def scan( self ):
+    token = self.client.call( '/api/v1/Auth/User(login_via_camera)', {} )
+    print( "Login token '{0}'".format( token ) )
+    self.client.setAuth( '__Customer__', token )

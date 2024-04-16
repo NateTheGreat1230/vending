@@ -6,6 +6,9 @@ from django.contrib.auth.models import AnonymousUser
 from cinp.orm_django import DjangoCInP as CInP
 from cinp.server_common import InvalidRequest
 
+from vending.Auth.lib import CustomerUser
+from vending.Customers.models import Customer
+
 session_engine = import_module( settings.SESSION_ENGINE )
 
 
@@ -15,6 +18,9 @@ def getUser( cookie_map, header_map ):
 
   if auth_id is None or auth_token is None:
     return AnonymousUser()
+
+  if auth_id == '__Customer__':
+    return CustomerUser( auth_token )
 
   request = Request( session_engine.SessionStore( auth_token ) )
 
@@ -70,14 +76,29 @@ class User():
     request = Request( session=user._django_session, user=user )
     auth.logout( request )
 
+  @cinp.action( return_type='String' )
+  @staticmethod
+  def login_via_camera():
+    return 1
+
   @cinp.action( return_type='String', paramater_type_list=[ '_USER_' ] )
   @staticmethod
   def whoami( user ):
     return str( user )
 
+  @cinp.action( return_type={ 'type': 'Model', 'model': Customer }, paramater_type_list=[ '_USER_' ] )
+  @staticmethod
+  def customer( user ):
+    if not isinstance( user, CustomerUser ):
+      return None
+
+    return user.customer
+
   @cinp.action( paramater_type_list=[ '_USER_', 'String' ] )
   @staticmethod
   def changePassword( user, password ):
+    if isinstance( user, CustomerUser ):
+      raise ValueError( 'Can not change the password of a Customer' )
     user.set_password( password )
     user.save()
 
