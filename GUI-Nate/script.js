@@ -25,19 +25,20 @@ function doAlert( msg ) {
   alert( msg );
 }
 
-// MARKED for deletion
-// function test() {  
-//   const product_list = $("#product_list");
-//   product_list.empty();
-//   cinp.getFilteredObjects( "/api/v1/Products/Product" ).done(
-//     function( resp ) {
-//       for ( const [ uri, product ] of Object.entries( resp ) ) {
-//         product_list.append( `<div>${product.name}</div>` );
-//       }
-//     } ).fail( function() {
-//       alert( "Unable to get product list" );
-//     } );
-// }
+function getGroupsArr() {
+  return new Promise((resolve, reject) => {
+    let products = [];
+    cinp.getFilteredObjects("/api/v1/Products/ProductGroup").done(function(resp) {
+      let groupArray = {};
+      for (const [uri, name] of Object.entries(resp)) {
+        groupArray[uri] = name;
+      }
+      resolve(products);
+    }).fail(function() {
+      reject("Unable to get product list");
+    });
+  });
+}
 
 function getProductsArr() {
   return new Promise((resolve, reject) => {
@@ -49,7 +50,9 @@ function getProductsArr() {
           product.cost,
           product.location,
           product.available,
-          product.id
+          product.id,
+          product.group,
+          uri
         ];
         products.push(productArray);
       }
@@ -60,7 +63,7 @@ function getProductsArr() {
   });
 }
 
-async function showPrice(button) {
+async function showInfo(button) {
   const infoSpot = $("#info");
   try {
     let products = await getProductsArr();
@@ -79,6 +82,26 @@ async function showPrice(button) {
     infoSpot.append(`<div>${error}</div>`);
   }
 }
+
+async function selectGroup() {
+  const infoSpot = $("#grid");
+  try {
+    let groups = await getGroupsArr();
+    const productLocation = button.textContent;
+    infoSpot.empty();
+    for (const uri in groups) {
+      
+        infoSpot.append(`
+          <button class="button">${groups[uri]}</button>
+        `);
+    }
+  } catch (error) {
+    infoSpot.empty();
+    infoSpot.append(`<div>${error}</div>`);
+  }
+}
+
+//<button class="button" onclick="buy('${products[i][0]}', ${products[i][1]}, '${products[i][2]}', ${products[i][3]}, ${products[i][4]})">Buy</button>
 
 function buy(product, price, location, available, id) {
   const infoSpot = $("#info");
